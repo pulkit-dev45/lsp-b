@@ -20,4 +20,5 @@ from django.urls import path,include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include("lsp_auth.urls")),
+    path('courses/', include("courses.urls")),
 ]
