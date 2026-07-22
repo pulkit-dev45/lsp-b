@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load course_extras %}
+{% block title %}{{ lesson.title }} — {{ lesson.course.title }}{% endblock %}
+{% block content %}
+<div class="flex min-h-[calc(100vh-73px)]">
+    <aside class="w-72 lg:w-80 flex-shrink-0 border-r border-neutral-200/80 bg-neutral-50/50 overflow-y-auto hidden md:block">
+        <div class="p-5">
+            <a href="{% url 'course-detail' lesson.course.id %}" class="text-sm text-neutral-400 hover:text-neutral-600 transition-colors">&larr; Back to Course</a>
+            <h2 class="mt-3 text-sm font-semibold text-black uppercase tracking-wider">Syllabus</h2>
+            {% for module in modules %}
+            {% with is_locked=module.id|in_list:locked_module_ids %}
+            <div class="mt-4">
+                <h3 class="text-xs font-medium {% if is_locked %}text-neutral-300{% else %}text-neutral-400{% endif %} uppercase tracking-wider px-3 mb-2">{{ module.title }}</h3>
+                <div class="space-y-1">
+                    {% for l in module.lessons.all %}
+                    {% if is_locked %}
+                    <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-300">
+                        <span class="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 border-neutral-100 bg-neutral-50">
+                            <svg class="w-3 h-3 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </span>
+                        <span class="truncate">{{ l.title }}</span>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'lesson-detail' l.id %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors {% if l.id == lesson.id %}bg-white border border-neutral-200/80 shadow-sm text-black font-medium{% else %}text-neutral-500 hover:text-black hover:bg-white/50{% endif %}">
+                        <span class="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 {% if l.progress_completed %}bg-black border-black text-white{% else %}border-neutral-300{% endif %}">
+                            {% if l.progress_completed %}
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            {% else %}
+                            <span class="text-xs">{{ forloop.counter }}</span>
+                            {% endif %}
+                        </span>
+                        <span class="truncate">{{ l.title }}</span>
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% with quiz=module.quizzes.first %}
+                {% if quiz and is_enrolled %}
+                    {% if is_locked %}
+                    <div class="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-xl text-sm text-neutral-300">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        Quiz Locked
+                    </div>
+                    {% else %}
+                    <a href="{% url 'module-quiz' module.id %}" class="flex items-center gap-3 px-3 py-2.5 mt-1 rounded-xl text-sm text-neutral-500 hover:text-black hover:bg-white/50 transition-colors">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        Quiz: {{ quiz.title }}
+                    </a>
+                    {% endif %}
+                {% endif %}
+                {% endwith %}
+            </div>
+            {% endwith %}
+            {% endfor %}
+        </div>
+    </aside>
+
+    <main class="flex-1 min-w-0">
+        <div class="max-w-4xl mx-auto px-6 py-10">
+            <div class="aspect-video bg-neutral-100 rounded-2xl overflow-hidden mb-8 relative" id="player-container">
+                {% if lesson.youtube_url %}
+                <div id="youtube-player" class="w-full h-full" data-video-id="{{ lesson.youtube_url|cut:'https://www.youtube.com/embed/' }}"></div>
+                <div id="player-placeholder" class="absolute inset-0 flex items-center justify-center bg-neutral-900 cursor-pointer" onclick="initPlayer()">
+                    <svg class="w-20 h-20 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-neutral-300">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if lesson.youtube_url %}
+            <div class="mb-6 flex items-center gap-3 text-xs text-neutral-400">
+                <span id="progress-text">Not started</span>
+                <span class="w-1 h-1 rounded-full bg-neutral-300"></span>
+                <span>{{ lesson.duration_minutes }} min</span>
+            </div>
+            {% endif %}
+
+            <div class="flex items-start justify-between gap-6">
+                <div>
+                    <h1 class="text-2xl font-semibold text-black">{{ lesson.title }}</h1>
+                    <p class="mt-2 text-neutral-500 leading-relaxed">{{ lesson.description }}</p>
+                </div>
+                <div id="complete-btn-container">
+                    {% include 'courses/partials/lesson_progress.html' %}
+                </div>
+            </div>
+
+            <div class="mt-10 flex items-center justify-between border-t border-neutral-200/80 pt-6">
+                {% if prev_lesson %}
+                <a href="{% url 'lesson-detail' prev_lesson.id %}" class="flex items-center gap-2 text-sm text-neutral-500 hover:text-black transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    {{ prev_lesson.title }}
+                </a>
+                {% else %}
+                <div></div>
+                {% endif %}
+                {% if next_lesson %}
+                <a href="{% url 'lesson-detail' next_lesson.id %}" class="flex items-center gap-2 text-sm text-neutral-500 hover:text-black transition-colors">
+                    {{ next_lesson.title }}
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+let player = null;
+let progressInterval = null;
+let isTracking = false;
+const videoId = document.getElementById('youtube-player')?.dataset.videoId;
+
+function onYouTubeIframeAPIReady() {
+    if (videoId) {
+        player = new YT.Player('youtube-player', {
+            height: '100%',
+            width: '100%',
+            videoId: videoId,
+            playerVars: {
+                'autoplay': 0,
+                'rel': 0,
+                'modestbranding': 1,
+            },
+            events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange,
+            }
+        });
+    }
+}
+
+function initPlayer() {
+    document.getElementById('player-placeholder')?.remove();
+    if (player && player.playVideo) {
+        player.playVideo();
+    }
+}
+
+function onPlayerReady(event) {
+    document.getElementById('player-placeholder')?.remove();
+}
+
+function onPlayerStateChange(event) {
+    if (event.data === YT.PlayerState.PLAYING) {
+        if (!isTracking) {
+            isTracking = true;
+            progressInterval = setInterval(trackProgress, 5000);
+        }
+        document.getElementById('progress-text').textContent = 'Watching...';
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        document.getElementById('progress-text').textContent = 'Paused';
+    } else if (event.data === YT.PlayerState.ENDED) {
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+        isTracking = false;
+        document.getElementById('progress-text').textContent = 'Completed';
+        sendProgress(player.getDuration(), true);
+    } else if (event.data === YT.PlayerState.CUED) {
+        const savedPos = localStorage.getItem('lesson_pos_{{ lesson.id }}');
+        if (savedPos && player && player.seekTo) {
+            player.seekTo(parseInt(savedPos), true);
+        }
+    }
+}
+
+function trackProgress() {
+    if (!player || !player.getCurrentTime) return;
+    const currentTime = Math.floor(player.getCurrentTime());
+    const duration = Math.floor(player.getDuration());
+    if (duration === 0) return;
+
+    const watched = Math.max(currentTime, parseInt(localStorage.getItem('lesson_watched_{{ lesson.id }}') || '0'));
+    localStorage.setItem('lesson_watched_{{ lesson.id }}', watched.toString());
+    localStorage.setItem('lesson_pos_{{ lesson.id }}', currentTime.toString());
+
+    const pct = Math.round((currentTime / duration) * 100);
+    document.getElementById('progress-text').textContent = `${pct}% watched`;
+
+    sendProgress(duration, false);
+}
+
+let lastSentSecond = 0;
+
+function sendProgress(duration, ended) {
+    const watchedStr = localStorage.getItem('lesson_watched_{{ lesson.id }}');
+    const watched = parseInt(watchedStr || '0');
+    const pos = parseInt(localStorage.getItem('lesson_pos_{{ lesson.id }}') || '0');
+
+    if (watched <= lastSentSecond && !ended) return;
+    lastSentSecond = watched;
+
+    fetch('{% url "lesson-progress" lesson.id %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: JSON.stringify({
+            watched_seconds: watched,
+            last_position: pos,
+            duration: duration,
+            ended: ended,
+        }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.is_completed) {
+            document.getElementById('complete-btn-container').innerHTML =
+                `<button class="flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-medium transition-colors bg-neutral-100 text-neutral-400 border border-neutral-200">✓ Completed</button>`;
+            document.getElementById('progress-text').textContent = 'Completed';
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const savedPos = localStorage.getItem('lesson_pos_{{ lesson.id }}');
+    const savedWatched = localStorage.getItem('lesson_watched_{{ lesson.id }}');
+    if (savedPos && savedWatched) {
+        document.getElementById('progress-text').textContent = `Resume at ${Math.floor(parseInt(savedPos)/60)}:${(parseInt(savedPos)%60).toString().padStart(2,'0')}`;
+    }
+});
+</script>
+{% endblock %}

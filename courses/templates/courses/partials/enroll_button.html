@@ -1,0 +1,15 @@
+{% if is_enrolled %}
+<div class="flex items-center gap-3">
+    <span class="text-sm text-green-600 font-medium">✓ Enrolled</span>
+    <a href="{% firstof first_lesson_url '#' %}" class="flex-1 py-3 rounded-full bg-black text-white text-sm font-medium hover:bg-neutral-800 transition-colors text-center block">
+        Go to Course &rarr;
+    </a>
+</div>
+{% else %}
+<form method="post" action="{% url 'enroll-course' course.id %}">
+    {% csrf_token %}
+    <button type="submit" class="w-full py-3 rounded-full bg-black text-white text-sm font-medium hover:bg-neutral-800 transition-colors">
+        Enroll Now
+    </button>
+</form>
+{% endif %}

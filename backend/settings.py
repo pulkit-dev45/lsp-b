@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-nn=$nt*1^5!9xk=(xaagbgw8^!_998erk5u_ww=b^@0!^!9r0i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -122,6 +122,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -131,3 +134,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS=["http://localhost:5173"]
 
 CORS_ALLOW_CREDENTIALS = True
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/auth/login-template/'

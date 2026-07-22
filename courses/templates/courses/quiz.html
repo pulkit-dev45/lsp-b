@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Quiz: {{ module.title }} — NDU Digital{% endblock %}
+{% block content %}
+<section class="max-w-3xl mx-auto px-6 py-12">
+    <a href="{% url 'course-detail' course.id %}" class="text-sm text-neutral-400 hover:text-neutral-600 transition-colors">&larr; Back to {{ course.title }}</a>
+    <h1 class="mt-4 text-3xl font-semibold text-black">Module Quiz: {{ module.title }}</h1>
+    <p class="mt-2 text-neutral-500">Answer at least 60% correctly to pass this module.</p>
+
+    {% if best_attempt and best_attempt.passed %}
+    <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 flex items-center justify-between">
+        <span>✓ You passed this quiz with <strong>{{ best_attempt.score }}/{{ best_attempt.total }}</strong> ({% widthratio best_attempt.score best_attempt.total 100 %}%).</span>
+        {% if next_module %}
+        <a href="{% url 'course-detail' course.id %}" class="text-xs font-medium text-green-700 hover:text-green-800 underline">Next Module &rarr;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if previous_attempts %}
+    <div class="mt-4 p-4 bg-neutral-50 border border-neutral-200 rounded-xl">
+        <h3 class="text-sm font-medium text-neutral-700 mb-2">Previous Attempts</h3>
+        {% for att in previous_attempts %}
+        <div class="flex items-center justify-between text-sm py-1 {% if not forloop.last %}border-b border-neutral-100{% endif %}">
+            <span class="text-neutral-500">{{ att.attempted_at|date:"M j, Y H:i" }}</span>
+            <span class="{% if att.passed %}text-green-600{% else %}text-red-500{% endif %}">
+                {{ att.score }}/{{ att.total }} ({% widthratio att.score att.total 100 %}%) {% if att.passed %}✓ Pass{% else %}✗ Fail{% endif %}
+            </span>
+            <a href="{% url 'quiz-result' module.id att.id %}" class="text-neutral-400 hover:text-black text-xs">Review</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'submit-quiz' module.id %}" class="mt-8 space-y-8">
+        {% csrf_token %}
+        {% for question in questions %}
+        <div class="border border-neutral-200/80 rounded-2xl p-6">
+            <h3 class="text-base font-medium text-black mb-4">{{ forloop.counter }}. {{ question.question }}</h3>
+            <div class="space-y-3">
+                {% for option in question.options.all %}
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-neutral-200/80 cursor-pointer hover:bg-neutral-50 transition-colors has-[:checked]:bg-neutral-100 has-[:checked]:border-black">
+                    <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" required class="w-4 h-4 text-black accent-black">
+                    <span class="text-sm text-neutral-700">{{ option.option_value }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="w-full py-3 rounded-full bg-black text-white text-sm font-medium hover:bg-neutral-800 transition-colors">
+            Submit Quiz
+        </button>
+    </form>
+</section>
+{% endblock %}

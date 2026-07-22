@@ -1,0 +1,7 @@
+<button id="complete-btn"
+        hx-post="{% url 'mark-complete' lesson.id %}"
+        hx-target="#complete-btn"
+        hx-swap="outerHTML"
+        class="flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-medium transition-colors {% if is_completed %}bg-neutral-100 text-neutral-400 border border-neutral-200{% else %}bg-black text-white hover:bg-neutral-800{% endif %}">
+    {% if is_completed %}✓ Completed{% else %}Mark Complete{% endif %}
+</button>
