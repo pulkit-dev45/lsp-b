@@ -16,12 +16,12 @@
     </div>
 
     {% if attempt.passed %}
-    <div class="mt-6 text-center flex items-center justify-center gap-4">
-        <a href="{% url 'course-detail' course.id %}" class="inline-flex px-6 py-2.5 rounded-full bg-neutral-100 text-neutral-600 text-sm font-medium hover:bg-neutral-200 transition-colors">
+    <div class="mt-6 text-center flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="{% url 'course-detail' course.id %}" class="inline-flex px-6 py-2.5 rounded-full bg-neutral-100 text-neutral-600 text-sm font-medium hover:bg-neutral-200 transition-colors w-full sm:w-auto">
             Back to Course
         </a>
         {% if next_lesson %}
-        <a href="{% url 'lesson-detail' next_lesson.id %}" class="inline-flex px-6 py-2.5 rounded-full bg-black text-white text-sm font-medium hover:bg-neutral-800 transition-colors">
+        <a href="{% url 'lesson-detail' next_lesson.id %}" class="inline-flex px-6 py-2.5 rounded-full bg-black text-white text-sm font-medium hover:bg-neutral-800 transition-colors w-full sm:w-auto">
             {{ next_module.title }} &rarr;
         </a>
         {% endif %}

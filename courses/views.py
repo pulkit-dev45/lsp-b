@@ -31,6 +31,8 @@ class CourseDetails(APIView):
 
 
 def landing_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
     featured = Course.objects.filter(is_active=True)[:3]
     return render(request, 'landing.html', {'featured': featured})
 
